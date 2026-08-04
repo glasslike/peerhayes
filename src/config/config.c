@@ -20,7 +20,7 @@ void vmod_config_defaults(vmod_config_t *cfg) {
   cfg->modem_speed = 14400;
   cfg->auto_answer = 0;
   snprintf(cfg->listen, sizeof(cfg->listen), "0.0.0.0:5000");
-  snprintf(cfg->name, sizeof(cfg->name), "vmodem");
+  snprintf(cfg->name, sizeof(cfg->name), "PeerHayes");
   cfg->directory.entries = cfg->dial_entries;
   cfg->directory.count = 0;
 }
