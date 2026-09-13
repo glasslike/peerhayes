@@ -2,10 +2,6 @@
 
 **Peer-to-peer Hayes modem emulator over TCP/IP**
 
-Version **0.1.0**  
-Author: **Alexey Matrosov** · FidoNet **2:203/910**  
-License: MIT
-
 ```text
 Legacy app ── COM/tty ── peerhayesd ── TCP (call setup, then raw) ── peerhayesd ── COM/tty ── Legacy app
 ```
@@ -91,5 +87,7 @@ Wire protocol during call setup: **VMCP/1** (PeerHayes call control). After CONN
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+(c) 2:203/910@fidonet
 
 Design notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
