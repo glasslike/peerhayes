@@ -250,6 +250,7 @@ static void tcp_close(vmod_transport_t *t) {
 static void process_rx(vmod_transport_t *t) {
   tcp_impl_t *impl = (tcp_impl_t *)t->impl;
   size_t i;
+  size_t len;
 
   if (!t->modem || impl->rx_len == 0)
     return;
@@ -260,28 +261,42 @@ static void process_rx(vmod_transport_t *t) {
     return;
   }
 
+  /*
+   * VMCP handlers (NOANSWER / BUSY / HANGUP) may call tcp_close(), which
+   * zeroes rx_len via close_conn(). Snapshot length and abort safely if the
+   * connection disappears mid-parse — otherwise size_t underflow in the
+   * memmove tail corrupts the heap (seen as segfault after unanswered calls).
+   */
+  len = impl->rx_len;
   i = 0;
-  while (i < impl->rx_len) {
+  while (i < len) {
     size_t start = i;
-    while (i < impl->rx_len && impl->rx[i] != '\r')
+    while (i < len && impl->rx[i] != '\r')
       i++;
-    if (i >= impl->rx_len)
+    if (i >= len)
       break;
     vmod_modem_handle_vmcp_line(t->modem, impl->rx + start, i - start);
+    if (!t->connected || impl->conn_fd == VMOD_INVALID_SOCK) {
+      impl->rx_len = 0;
+      return;
+    }
     i++;
-    if (i < impl->rx_len && impl->rx[i] == '\n')
+    if (i < len && impl->rx[i] == '\n')
       i++;
     if (!t->control_phase) {
-      size_t rem = impl->rx_len - i;
+      size_t rem = len - i;
       if (rem)
         vmod_modem_on_peer_data(t->modem, (const uint8_t *)impl->rx + i, rem);
       impl->rx_len = 0;
       return;
     }
+    len = impl->rx_len;
   }
-  if (i > 0) {
+  if (i > 0 && i <= impl->rx_len) {
     memmove(impl->rx, impl->rx + i, impl->rx_len - i);
     impl->rx_len -= i;
+  } else if (i > impl->rx_len) {
+    impl->rx_len = 0;
   }
 }
 

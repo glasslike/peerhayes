@@ -333,6 +333,7 @@ void vmod_modem_on_peer_connect(vmod_modem_t *m, int speed) {
 
 void vmod_modem_on_peer_busy(vmod_modem_t *m) {
   m->cmd_mode = 1;
+  m->timer_active = 0;
   vmod_modem_emit_result(m, VMOD_RESULT_BUSY);
   if (m->transport)
     vmod_transport_close(m->transport);
@@ -341,6 +342,7 @@ void vmod_modem_on_peer_busy(vmod_modem_t *m) {
 
 void vmod_modem_on_peer_no_answer(vmod_modem_t *m) {
   m->cmd_mode = 1;
+  m->timer_active = 0;
   vmod_modem_emit_result(m, VMOD_RESULT_NO_ANSWER);
   if (m->transport)
     vmod_transport_close(m->transport);

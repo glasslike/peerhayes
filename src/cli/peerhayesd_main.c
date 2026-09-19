@@ -70,10 +70,10 @@ static void on_modem_state(void *user, vmod_call_state_t old_st,
 }
 
 static void print_version(void) {
+  /* Keep --version compact: name/version, one-line description, copyright. */
   printf("%s %s (%s)\n", PEERHAYES_NAME, PEERHAYES_VERSION_STRING,
          PEERHAYES_DAEMON_NAME);
-  printf("%s\n", PEERHAYES_DESCRIPTION);
-  printf("%s · FidoNet %s\n", PEERHAYES_AUTHOR, PEERHAYES_FTN_ADDR);
+  printf("%s\n\n", PEERHAYES_DESCRIPTION);
   printf("%s\n", PEERHAYES_COPYRIGHT);
 }
 

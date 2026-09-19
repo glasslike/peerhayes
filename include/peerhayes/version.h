@@ -21,7 +21,9 @@
 
 #define PEERHAYES_AUTHOR "Alexey Matrosov"
 #define PEERHAYES_FTN_ADDR "2:203/910"
-#define PEERHAYES_COPYRIGHT "Copyright (c) 2026 Alexey Matrosov"
+/* One-line banner for --version (avoid repeating author/copyright). */
+#define PEERHAYES_COPYRIGHT \
+  "(c) 2026 Alexey Matrosov, 2:203/910 Fidonet."
 
 #define PEERHAYES_DESCRIPTION \
   "Peer-to-peer Hayes modem emulator with call setup over TCP/IP"
