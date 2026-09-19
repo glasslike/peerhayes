@@ -26,7 +26,7 @@ That call state machine is the product. The IP network replaces the telephone li
 |---|---|
 | Program | `peerhayesd` |
 | Project | PeerHayes |
-| Version | 0.1.0 |
+| Version | 0.1.1-dev |
 
 ```bat
 peerhayesd --config examples/peerhayes-com-a.conf --debug
@@ -70,7 +70,7 @@ listen = 0.0.0.0:5001
 
 Wire protocol during call setup: **VMCP/1** (PeerHayes call control). After CONNECT the socket carries raw octets only.
 
-## Status (0.1.0)
+## Status (0.1.1-dev)
 
 - Hayes command subset used by classic FTN mailers
 - Symmetric CALL / RING / ANSWER / CONNECT over TCP

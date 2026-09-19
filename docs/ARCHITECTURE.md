@@ -1,7 +1,7 @@
 # PeerHayes architecture
 
 **PeerHayes** — peer-to-peer Hayes modem emulator over IP  
-Version 0.1.0 · Alexey Matrosov · 2:203/910
+Version 0.1.1-dev · Alexey Matrosov · 2:203/910
 
 ## Goal
 
@@ -56,7 +56,7 @@ VMCP/1 BUSY | NOANSWER | HANGUP | ERROR …
 
 With com0com-style null modem, **local DTR is seen by the application as DCD**. PeerHayes raises DTR only while ONLINE (unless `&C0`).
 
-## Platforms (0.1.0)
+## Platforms (0.1.1-dev)
 
 - Windows 10/11 host and guest (COM, com0com, TCP) — tested with KittenMail
 - Later: FreeDOS (host pipe / Watt-32), Linux PTY, OS/2

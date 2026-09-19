@@ -16,8 +16,9 @@
 #define PEERHAYES_DAEMON_NAME "peerhayesd"
 #define PEERHAYES_VERSION_MAJOR 0
 #define PEERHAYES_VERSION_MINOR 1
-#define PEERHAYES_VERSION_PATCH 0
-#define PEERHAYES_VERSION_STRING "0.1.0"
+#define PEERHAYES_VERSION_PATCH 1
+/* Development builds on the `dev` branch use a -dev suffix. */
+#define PEERHAYES_VERSION_STRING "0.1.1-dev"
 
 #define PEERHAYES_AUTHOR "Alexey Matrosov"
 #define PEERHAYES_FTN_ADDR "2:203/910"

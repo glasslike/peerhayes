@@ -3,7 +3,7 @@ PeerHayes
 
 Peer-to-peer Hayes modem emulator over TCP/IP.
 
-Version: 0.1.0
+Version: 0.1.1-dev
 Author:  Alexey Matrosov
 FidoNet: 2:203/910
 License: MIT
