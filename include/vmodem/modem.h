@@ -44,9 +44,15 @@ typedef struct vmod_modem {
   int saw_a;
   int cmd_started;
 
-  /* Escape sequence +++ (guard timing refined in escape.c / tick) */
+  /*
+   * Hayes escape (+++) . esc_count is how many S2 bytes are held back
+   * and not yet sent to the peer. esc_plus_ms is the time of the last
+   * of those bytes. esc_quiet_ms is the time of the last DTE byte that
+   * was forwarded; the leading guard is measured from there.
+   */
   int esc_count;
-  int esc_armed;
+  uint64_t esc_plus_ms;
+  uint64_t esc_quiet_ms;
 
   struct vmod_transport *transport;
   void *dir_ctx; /* vmod_directory_t* */

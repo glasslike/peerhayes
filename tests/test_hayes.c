@@ -1,5 +1,6 @@
 #include "vmodem/hayes.h"
 #include "vmodem/modem.h"
+#include "vmodem/platform.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -63,6 +64,38 @@ int main(void) {
   vmod_modem_dte_input(&m, (const uint8_t *)"AT&C1&D2\r", 9);
   expect(m.cfg.dcd_always_on == 0, "&C1");
   expect(m.cfg.dtr_mode == 2, "&D2");
+
+  /*
+   * S12 = 2 is a 40 ms guard. '+' inside a frame must not escape.
+   * A quiet +++ must, and only after the trailing guard.
+   */
+  vmod_modem_init(&m, "E");
+  m.cfg.s[12] = 2;
+  m.cfg.echo = 0;
+  out[0] = '\0';
+  vmod_modem_set_dte_writer(&m, capture, out);
+  m.cmd_mode = 0;
+  vmod_modem_set_state(&m, VMOD_STATE_ONLINE);
+  vmod_modem_dte_input(&m, (const uint8_t *)"a+b+c+", 6);
+  vmod_modem_tick(&m, vmod_now_ms());
+  expect(m.state == VMOD_STATE_ONLINE, "pluses inside data stay online");
+  vmod_sleep_ms(50);
+  vmod_modem_dte_input(&m, (const uint8_t *)"+++", 3);
+  expect(m.state == VMOD_STATE_ONLINE, "+++ waits for trailing guard");
+  vmod_sleep_ms(50);
+  vmod_modem_tick(&m, vmod_now_ms());
+  expect(m.state == VMOD_STATE_ONLINE_CMD, "quiet +++ enters command mode");
+  expect(strstr(out, "OK") != NULL, "escape replies OK");
+  {
+    uint8_t hi[3] = {0xAB, 0xAB, 0xAB};
+    m.cmd_mode = 0;
+    vmod_modem_set_state(&m, VMOD_STATE_ONLINE);
+    vmod_sleep_ms(50);
+    vmod_modem_dte_input(&m, hi, 3);
+    vmod_sleep_ms(50);
+    vmod_modem_tick(&m, vmod_now_ms());
+    expect(m.state == VMOD_STATE_ONLINE, "8-bit 0xAB is not '+'");
+  }
 
   if (g_fail) {
     fprintf(stderr, "%d hayes tests failed\n", g_fail);

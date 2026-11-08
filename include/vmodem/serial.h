@@ -39,7 +39,13 @@ int vmod_serial_write(vmod_serial_t *s, const uint8_t *buf, size_t len);
 
 vmod_serial_kind_t vmod_serial_kind(const vmod_serial_t *s);
 
-/* Drive DTR on our port. With com0com null-modem, peer sees this as DCD/DSR. */
+/*
+ * Drive DTR on our port. A com0com-style null modem maps that DTR to DCD
+ * on the DTE. A Linux PTY has no modem-status registers (TIOCMGET fails
+ * with ENOTTY), so when carrier_path is set we also publish '1' or '0'
+ * there. The DTE-side adapter reads that file and reports TIOCM_CAR.
+ */
+void vmod_serial_set_carrier_file(vmod_serial_t *s, const char *path);
 void vmod_serial_set_dtr(vmod_serial_t *s, int on);
 
 #ifdef __cplusplus

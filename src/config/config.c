@@ -98,6 +98,8 @@ vmod_status_t vmod_config_load(vmod_config_t *cfg, const char *path) {
           cfg->auto_answer = atoi(val);
         else if (strcmp(key, "name") == 0)
           snprintf(cfg->name, sizeof(cfg->name), "%s", val);
+        else if (strcmp(key, "carrier_file") == 0)
+          snprintf(cfg->carrier_file, sizeof(cfg->carrier_file), "%s", val);
       } else if (strcmp(section, "network") == 0) {
         if (strcmp(key, "listen") == 0)
           snprintf(cfg->listen, sizeof(cfg->listen), "%s", val);

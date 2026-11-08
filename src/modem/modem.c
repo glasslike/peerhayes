@@ -11,6 +11,7 @@
 #include "vmodem/modem.h"
 #include "vmodem/directory.h"
 #include "vmodem/log.h"
+#include "vmodem/platform.h"
 #include "vmodem/transport.h"
 #include "vmodem/vmcp.h"
 
@@ -83,6 +84,15 @@ void vmod_modem_set_state(vmod_modem_t *m, vmod_call_state_t st) {
   if (old == st)
     return;
   m->state = st;
+  /*
+   * Online time starts the leading escape guard. A '+' that arrives in
+   * the same instant as CONNECT is payload, not the start of +++.
+   */
+  if (st == VMOD_STATE_ONLINE) {
+    m->esc_count = 0;
+    m->esc_plus_ms = 0;
+    m->esc_quiet_ms = vmod_now_ms();
+  }
   VMOD_LOGI("%s state %s -> %s", m->name, state_name(old), state_name(st));
   if (m->on_state)
     m->on_state(m->state_user, old, st);
@@ -208,8 +218,12 @@ void vmod_modem_answer(vmod_modem_t *m) {
   m->cmd_mode = 0;
   if (m->transport)
     m->transport->control_phase = 0;
-  vmod_modem_emit_connect(m);
+  /*
+   * Carrier goes up before CONNECT is written, so the DTE that acts on
+   * the result code already sees DCD (&C1).
+   */
   vmod_modem_set_state(m, VMOD_STATE_ONLINE);
+  vmod_modem_emit_connect(m);
 }
 
 void vmod_modem_hangup(vmod_modem_t *m) {
@@ -326,8 +340,8 @@ void vmod_modem_on_peer_connect(vmod_modem_t *m, int speed) {
     m->transport->control_phase = 0;
   if (m->state == VMOD_STATE_CALL_SETUP || m->state == VMOD_STATE_DIALING ||
       m->state == VMOD_STATE_ANSWERING) {
-    vmod_modem_emit_connect(m);
     vmod_modem_set_state(m, VMOD_STATE_ONLINE);
+    vmod_modem_emit_connect(m);
   }
 }
 
@@ -380,19 +394,18 @@ void vmod_modem_dte_input(vmod_modem_t *m, const uint8_t *data, size_t len) {
     return;
   }
 
-  /* Online transparent path */
+  /* Online transparent path. Escape holds '+' until the guard expires. */
   if (m->state == VMOD_STATE_ONLINE) {
     size_t i;
+    uint64_t now = vmod_now_ms();
     for (i = 0; i < len; i++) {
-      uint8_t bare = (uint8_t)(data[i] & 0x7f);
-      vmod_escape_on_byte(m, bare, 0);
+      vmod_escape_on_byte(m, data[i], now);
+      if (m->state != VMOD_STATE_ONLINE) {
+        if (i + 1 < len)
+          vmod_hayes_feed(m, data + i + 1, len - (i + 1));
+        return;
+      }
     }
-    if (m->esc_count >= 3) {
-      vmod_escape_on_idle(m, 0);
-      return; /* do not forward +++ */
-    }
-    if (m->transport && m->transport->connected)
-      vmod_transport_send(m->transport, data, len);
   } else if (m->state == VMOD_STATE_ONLINE_CMD) {
     vmod_hayes_feed(m, data, len);
   }
@@ -403,6 +416,7 @@ size_t vmod_modem_poll_dte_out(vmod_modem_t *m, uint8_t *dst, size_t dst_sz) {
 }
 
 void vmod_modem_tick(vmod_modem_t *m, uint64_t now_ms) {
+  vmod_escape_on_idle(m, now_ms);
   if (m->timer_active && m->timer_deadline_ms == 0) {
     m->timer_deadline_ms = now_ms + (uint64_t)m->cfg.s[7] * 1000ull;
   }

@@ -170,6 +170,8 @@ int main(int argc, char **argv) {
     vmod_tcp_transport_destroy(tcp);
     return 1;
   }
+  if (cfg.carrier_file[0])
+    vmod_serial_set_carrier_file(serial, cfg.carrier_file);
   dte.serial = serial;
   dte.modem = &modem;
   vmod_modem_set_dte_writer(&modem, dte_write_cb, &dte);

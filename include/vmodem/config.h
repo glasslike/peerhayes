@@ -28,6 +28,8 @@ typedef struct {
   int auto_answer; /* S0 rings; 0 = manual ATA */
   char listen[128];
   char name[32];
+  /* Optional '1'/'0' file for DTE carrier when the port has no TIOCM. */
+  char carrier_file[VMOD_CFG_PATH_MAX];
 
   vmod_dir_entry_t dial_entries[VMOD_CFG_DIAL_MAX];
   char dial_num_storage[VMOD_CFG_DIAL_MAX][64];

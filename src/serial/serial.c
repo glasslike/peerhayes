@@ -39,6 +39,8 @@ struct vmod_serial {
   int fd;
   int is_stdio;
 #endif
+  /* Written on every carrier change when the DTE port cannot do TIOCM. */
+  char carrier_path[512];
 };
 
 static int parse_baud(int baud) {
@@ -345,9 +347,41 @@ vmod_serial_kind_t vmod_serial_kind(const vmod_serial_t *s) {
   return s ? s->kind : VMOD_SERIAL_COM;
 }
 
+void vmod_serial_set_carrier_file(vmod_serial_t *s, const char *path) {
+  if (!s)
+    return;
+  if (!path || !path[0]) {
+    s->carrier_path[0] = '\0';
+    return;
+  }
+  snprintf(s->carrier_path, sizeof(s->carrier_path), "%s", path);
+}
+
+/*
+ * Publish carrier for a DTE whose port has no modem-status bits.
+ * '1' while the call is up (&C1), '0' after hangup. One byte plus LF so
+ * a reader can decide from the first character.
+ */
+static void write_carrier_file(vmod_serial_t *s, int on) {
+  FILE *fp;
+  if (!s->carrier_path[0])
+    return;
+  fp = fopen(s->carrier_path, "w");
+  if (!fp) {
+    VMOD_LOGW("carrier file %s: cannot write", s->carrier_path);
+    return;
+  }
+  fputc(on ? '1' : '0', fp);
+  fputc('\n', fp);
+  fflush(fp);
+  fclose(fp);
+}
+
 void vmod_serial_set_dtr(vmod_serial_t *s, int on) {
   if (!s || s->is_stdio)
     return;
+  /* Always, including when the ioctl below is ENOTTY (Linux PTY). */
+  write_carrier_file(s, on);
 #ifdef _WIN32
   if (s->handle == INVALID_HANDLE_VALUE)
     return;
@@ -364,6 +398,10 @@ void vmod_serial_set_dtr(vmod_serial_t *s, int on) {
       else
         status &= ~TIOCM_DTR;
       ioctl(s->fd, TIOCMSET, &status);
+      VMOD_LOGD("DTR %s", on ? "ON (carrier)" : "OFF");
+    } else {
+      VMOD_LOGD("DTR %s (port has no modem lines, carrier file only)",
+                on ? "ON" : "OFF");
     }
   }
 #endif
