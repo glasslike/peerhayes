@@ -1,0 +1,63 @@
+# qico-modem-emulation.service — answer the virtual modem (mgetty, then qico -a emsi)
+#
+# Not part of qico.target. This unit is the one to enable. It starts
+# qico-peerhayes.service, and that starts qico-tty0tty.service.
+# qico.target stays the outbound daemon plus the BinkP and ifcico sockets.
+#
+# tty0tty provides /dev/tnt0. mgetty owns that port: it sends ATA and,
+# because fido-send-emsi is on, exchanges EMSI_REQ / EMSI_INQ.
+# login.config then execs qico -a emsi, which skips that init. qico -a
+# does not open a port line and does not send ATA. DCD comes from the
+# null-modem wiring (peer DTR), not from a helper library.
+#
+# mgetty stays root. It setuids to the user named in login.config (map).
+# NoNewPrivileges would block that setuid, so this unit does not set it.
+#
+# Paths match the other units (node 2:203/910):
+#   binary: /home/map/ftn/usr/bin/qico
+#   config: /home/map/ftn/usr/etc/qico/qico.conf
+#   device: /dev/tnt0
+#
+# Install (as root), without touching qico.target:
+#   cp systemd/qico-tty0tty.service \
+#      systemd/qico-peerhayes.service \
+#      systemd/qico-modem-emulation.service /etc/systemd/system/
+#   cp systemd/peerhayes-vmodem.conf /home/map/ftn/usr/etc/qico/peerhayes.conf
+#   cp systemd/mgetty.login.config /etc/mgetty/login.config
+#   # merge systemd/mgetty.port-tnt0 into /etc/mgetty/mgetty.config
+#   systemctl daemon-reload
+#   systemctl enable --now qico-modem-emulation.service
+#
+# Debian mgetty is built with FIDO. Without that, fido-send-emsi is
+# ignored and the /FIDO/ line never runs.
+# The qico lockdir (usually /var/lock) must be the directory where
+# mgetty writes LCK..tnt0, or the daemon will dial a busy line.
+# peerhayesd must be the Linux binary at /home/map/ftn/usr/bin/peerhayesd.
+# map must be in group dialout so it can open /dev/tnt1.
+
+[Unit]
+Description=qico modem answer via mgetty (/dev/tnt0)
+Documentation=man:mgetty(8) man:qico(8)
+BindsTo=qico-tty0tty.service
+After=qico-tty0tty.service qico-peerhayes.service
+Wants=qico-peerhayes.service
+# A serial getty on the same node would steal the port.
+Conflicts=serial-getty@tnt0.service getty@tnt0.service
+
+[Service]
+Type=simple
+
+# The node is created by the tty0tty module. Wait and retry until it exists.
+ExecStartPre=/bin/sh -c 'test -c /dev/tnt0'
+ExecStart=/usr/sbin/mgetty /dev/tnt0
+
+# mgetty exits after each call. Start it again for the next RING.
+Restart=always
+RestartSec=3
+
+TimeoutStopSec=30
+KillMode=mixed
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

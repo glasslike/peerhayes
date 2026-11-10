@@ -1,0 +1,39 @@
+# qico-peerhayes.service — PeerHayes on the modem end of the null-modem pair
+#
+# Not part of qico.target. Started by qico-modem-emulation.service, after tty0tty
+# has created /dev/tnt1. DTR on tnt1 is DCD on tnt0, which is what qico reads.
+#
+# Binary and config follow the other units (node 2:203/910):
+#   /home/map/ftn/usr/bin/peerhayesd
+#   /home/map/ftn/usr/etc/qico/peerhayes.conf
+#
+# Install (as root):
+#   cp systemd/qico-peerhayes.service /etc/systemd/system/
+#   cp systemd/peerhayes-vmodem.conf /home/map/ftn/usr/etc/qico/peerhayes.conf
+
+[Unit]
+Description=PeerHayes virtual modem for qico
+Documentation=man:qico(8)
+BindsTo=qico-tty0tty.service
+After=qico-tty0tty.service
+
+[Service]
+Type=simple
+User=map
+Group=map
+SupplementaryGroups=dialout
+
+ExecStartPre=/bin/sh -c 'test -c /dev/tnt1'
+ExecStart=/home/map/ftn/usr/bin/peerhayesd --config /home/map/ftn/usr/etc/qico/peerhayes.conf
+
+WorkingDirectory=/home/map/ftn/fido
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+KillMode=mixed
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

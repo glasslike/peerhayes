@@ -1,0 +1,22 @@
+# Port block for a hardware modem on /dev/ttyUSB0.
+# Paste it into /etc/mgetty/mgetty.config. The name after "port" is the
+# device basename. Use ttyS0 or ttyACM0 if that is where the modem is,
+# and use that same name in qico-mgetty-serial.service.
+#
+# init-chat is the same string PeerHayes accepts. A normal Hayes modem
+# answers AT and ATZ with OK as well. Do not extend it.
+#
+# need-dsr y: a powered modem holds DSR on. If mgetty waits forever
+# with "DSR is off", the cable has no DSR and this line has to be n.
+# ignore-carrier n: after CONNECT, loss of DCD ends the session.
+# tty0tty cannot use need-dsr y. That setting is only for this port.
+
+port ttyUSB0
+  speed 57600
+  data-only y
+  toggle-dtr y
+  need-dsr y
+  ignore-carrier n
+  fido-send-emsi y
+  issue-file /dev/null
+  init-chat "" AT OK ATZ OK

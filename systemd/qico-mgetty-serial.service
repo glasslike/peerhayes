@@ -1,0 +1,43 @@
+# qico-mgetty-serial.service — answer a hardware modem
+#
+# Not part of qico.target. This unit is the hardware counterpart of
+# qico-modem-emulation.service. Enable one of them, not both: both would run
+# mgetty, and only one of them has a modem on the line.
+#
+# There is no tty0tty and no peerhayesd. mgetty opens the UART itself.
+# The device name below is /dev/ttyUSB0. If the modem is on another
+# node (ttyS0, ttyACM0), change every ttyUSB0 in this file and use the
+# same basename as the "port" block in /etc/mgetty/mgetty.config
+# (systemd/mgetty.port-ttyUSB0).
+#
+# mgetty stays root and setuids to the user in login.config. Do not set
+# NoNewPrivileges. Restart=always brings mgetty back after each call.
+#
+# Install (as root), without touching qico.target:
+#   cp systemd/qico-mgetty-serial.service /etc/systemd/system/
+#   # merge systemd/mgetty.port-ttyUSB0 into /etc/mgetty/mgetty.config
+#   systemctl disable --now qico-modem-emulation.service
+#   systemctl enable --now qico-mgetty-serial.service
+
+[Unit]
+Description=qico modem answer via mgetty (/dev/ttyUSB0)
+Documentation=man:mgetty(8) man:qico(8)
+Conflicts=serial-getty@ttyUSB0.service getty@ttyUSB0.service
+After=systemd-udev-settle.service
+
+[Service]
+Type=simple
+
+ExecStartPre=/bin/sh -c 'test -c /dev/ttyUSB0'
+ExecStart=/usr/sbin/mgetty /dev/ttyUSB0
+
+# mgetty exits after each call. Start it again for the next RING.
+Restart=always
+RestartSec=3
+
+TimeoutStopSec=30
+KillMode=mixed
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

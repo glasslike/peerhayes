@@ -78,6 +78,12 @@ Wire protocol during call setup: **VMCP/1** (PeerHayes call control). After CONN
 - DCD via DTR for com0com null-modem pairs
 - Tested: KittenMail on Windows 10 host ↔ KittenMail on Windows 11 VirtualBox VM
 
+## Linux with qico
+
+On Debian 12, qico answers through mgetty. The serial line is a tty0tty
+pair, or a real modem. The units and the mgetty snippets are in
+`systemd/`. The setup is in [docs/qico-modem-linux.md](docs/qico-modem-linux.md).
+
 ## Roadmap
 
 - FreeDOS (host pipe / native)

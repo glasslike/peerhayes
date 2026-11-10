@@ -1,0 +1,32 @@
+# qico-tty0tty.service — load the null-modem pairs
+#
+# Not part of qico.target. qico-modem-emulation.service pulls this unit in.
+# tty0tty creates real serial devices, four pairs:
+#   /dev/tnt0 <-> /dev/tnt1
+#   /dev/tnt2 <-> /dev/tnt3
+#   /dev/tnt4 <-> /dev/tnt5
+#   /dev/tnt6 <-> /dev/tnt7
+# TX/RX are crossed, and so are the modem lines: DTR on one end is
+# DSR and DCD on the other. TIOCMGET works, so qico sees carrier
+# without a preload library.
+#
+# This node uses tnt0 (mgetty / qico) and tnt1 (peerhayesd).
+# Install tty0tty-dkms (or build the module) before enabling the unit.
+# The devices belong to group dialout.
+#
+# Install (as root), without touching qico.target:
+#   cp systemd/qico-tty0tty.service /etc/systemd/system/
+
+[Unit]
+Description=tty0tty null-modem pairs for qico
+Documentation=man:qico(8)
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/sbin/modprobe tty0tty
+ExecStart=/bin/sh -c 'test -c /dev/tnt0 && test -c /dev/tnt1'
+
+[Install]
+WantedBy=multi-user.target

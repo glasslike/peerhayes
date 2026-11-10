@@ -1,0 +1,27 @@
+# Port block for /etc/mgetty/mgetty.config.
+# Paste it into that file. If a "port tnt0" block is already there,
+# replace that block and leave every other port alone.
+#
+# fido-send-emsi y makes mgetty send EMSI_REQ and wait for EMSI_INQ
+# before login.config runs qico -a emsi. With it off, a mailer never
+# types the login name /FIDO/ and the call falls through to nologin.
+#
+# PeerHayes answers a bare AT and ATZ with OK. ATZ restores its
+# defaults: S0=0 (no auto-answer) and verbose text result codes.
+# mgetty then sends ATA itself.
+#
+# tty0tty wires the peer's DTR to both DSR and DCD. PeerHayes raises
+# DTR only while the call is up, so DSR is off during init. need-dsr
+# stays n so mgetty still sends AT. ignore-carrier stays n: after
+# CONNECT, DCD is real and a dropped DTR ends the line.
+# toggle-dtr y lets mgetty reset a modem that is stuck online.
+
+port tnt0
+  speed 57600
+  data-only y
+  toggle-dtr y
+  need-dsr n
+  ignore-carrier n
+  fido-send-emsi y
+  issue-file /dev/null
+  init-chat "" AT OK ATZ OK
