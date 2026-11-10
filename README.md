@@ -77,6 +77,7 @@ Wire protocol during call setup: **VMCP/1** (PeerHayes call control). After CONN
 - Win32 COM / named pipe / stdio DTE
 - DCD via DTR for com0com null-modem pairs
 - Tested: KittenMail on Windows 10 host ↔ KittenMail on Windows 11 VirtualBox VM
+- Tested: qico on Debian 12
 
 ## Linux example with qico
 
