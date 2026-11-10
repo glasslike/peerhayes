@@ -78,12 +78,6 @@ Wire protocol during call setup: **VMCP/1** (PeerHayes call control). After CONN
 - DCD via DTR for com0com null-modem pairs
 - Tested: KittenMail on Windows 10 host ↔ KittenMail on Windows 11 VirtualBox VM
 
-## Roadmap
-
-- FreeDOS (host pipe / native)
-- Debian / POSIX PTY peer
-- Broader Hayes compatibility as needed by real software
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
